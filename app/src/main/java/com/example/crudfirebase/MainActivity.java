@@ -31,75 +31,84 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String ARTIST_NAME = "artistname";
     public static final String ARTIST_ID = "artistid";
-    EditText editTextName;
-    Button buttonAdd;
-    Spinner spinnerGenres;
 
-    DatabaseReference databaseArtist;
-    ListView listViewArtist;
+    EditText edtName;
+    Button btnAdd;
+    Spinner spinGenres;
+    ListView lvArtists;
+
     List<Artist> artistList;
+
+    DatabaseReference databaseArtists;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        databaseArtist = FirebaseDatabase.getInstance().getReference("artist");
+        databaseArtists = FirebaseDatabase.getInstance().getReference("artists");
 
-        editTextName = (EditText) findViewById(R.id.editTextName);
-        buttonAdd = (Button) findViewById(R.id.buttonAddArtist);
-        spinnerGenres = (Spinner) findViewById(R.id.spinnerGenres);
+        edtName = (EditText) findViewById(R.id.edtName);
+        btnAdd = (Button) findViewById(R.id.btnAddArtist);
+        spinGenres = (Spinner) findViewById(R.id.spinnerGenres);
+        lvArtists = (ListView) findViewById(R.id.lvArtists);
 
-        listViewArtist = (ListView) findViewById(R.id.listViewArtist);
         artistList = new ArrayList<>();
-        buttonAdd.setOnClickListener(new View.OnClickListener() {
+
+        btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 addArtist();
             }
         });
 
-        listViewArtist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        lvArtists.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Artist artist = artistList.get(i);
 
                 Intent intent = new Intent(getApplicationContext(), AddTrackActivity.class);
-                intent.putExtra(ARTIST_ID, artist.getArtistId());
+                intent.putExtra(ARTIST_ID, artist.getArtistID());
                 intent.putExtra(ARTIST_NAME, artist.getArtistName());
 
                 startActivity(intent);
             }
         });
 
-        listViewArtist.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        lvArtists.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-               Artist artist = artistList.get(i);
-               showUpdateDialog(artist.getArtistId(), artist.getArtistName());
+
+                Artist artist = artistList.get(i);
+
+                showUpdateDialog(artist.getArtistID(), artist.getArtistName());
                 return false;
             }
         });
+
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        databaseArtist.addValueEventListener(new ValueEventListener() {
+        databaseArtists.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
                 artistList.clear();
-                for (DataSnapshot artistSanpshot : dataSnapshot.getChildren()) {
-                    Artist artist = artistSanpshot.getValue(Artist.class);
+
+                for (DataSnapshot artistSnapshot : dataSnapshot.getChildren()){
+                    Artist artist = artistSnapshot.getValue(Artist.class);
+
                     artistList.add(artist);
                 }
                 ArtistList adapter = new ArtistList(MainActivity.this, artistList);
-                listViewArtist.setAdapter(adapter);
+                lvArtists.setAdapter(adapter);
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onCancelled(DatabaseError databaseError) {
 
             }
         });
@@ -107,28 +116,31 @@ public class MainActivity extends AppCompatActivity {
 
     private void showUpdateDialog(final String artistId, String artistName) {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+
         LayoutInflater inflater = getLayoutInflater();
 
-        final View dialogView = inflater.inflate(R.layout.update_dialog, null);
+        final View dialogView = inflater.inflate(R.layout.update_dialog,null);
+
         dialogBuilder.setView(dialogView);
 
-        final EditText editTextName = (EditText) dialogView.findViewById(R.id.editTextName);
-        final Button buttonUpdate = (Button) dialogView.findViewById(R.id.bottonUpdate);
-        final Spinner spinner = (Spinner) dialogView.findViewById(R.id.spinnergen);
+        final EditText edtNewName = (EditText) dialogView.findViewById(R.id.edtNewName);
+        final Button btnUpdate = (Button) dialogView.findViewById(R.id.btnUpdate);
+        final Spinner spinGenres = (Spinner) dialogView.findViewById(R.id.spinner);
+        final Button btnDelete = (Button) dialogView.findViewById(R.id.btnDelete);
 
-        dialogBuilder.setTitle("Update Artist " + artistId);
+        dialogBuilder.setTitle("Updating Artist " + artistName);
 
         final AlertDialog alertDialog = dialogBuilder.create();
         alertDialog.show();
 
-        buttonUpdate.setOnClickListener(new View.OnClickListener() {
+        btnUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String name = editTextName.getText().toString().trim();
-                String genre = spinner.getSelectedItem().toString();
+                String name = edtNewName.getText().toString().trim();
+                String genre = spinGenres.getSelectedItem().toString();
 
-                if (TextUtils.isEmpty(name)) {
-                    editTextName.setError("Perlu Nama");
+                if(TextUtils.isEmpty(name)) {
+                    edtNewName.setError("Name required");
                     return;
                 }
 
@@ -137,33 +149,50 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                deleteArtist(artistId);
+            }
+        });
+
     }
 
-    private boolean updateArtist(String id, String name, String genre) {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("artist").child(id);
+    private void deleteArtist(String artistId) {
+        DatabaseReference drArtist = FirebaseDatabase.getInstance().getReference("artists").child(artistId);
+        DatabaseReference drTracks = FirebaseDatabase.getInstance().getReference("tracks").child(artistId);
+
+        drArtist.removeValue();
+        drTracks.removeValue();
+
+        Toast.makeText(this, "Artist is deleted", Toast.LENGTH_LONG).show();
+    }
+
+    private boolean updateArtist(String id, String name, String genre){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("artists").child(id);
+
         Artist artist = new Artist(id, name, genre);
         databaseReference.setValue(artist);
 
-        Toast.makeText(this, "Update Artist Berhasil ", Toast.LENGTH_LONG).show();
-            return true;
+        Toast.makeText(this, "Artist Updated Successfully", Toast.LENGTH_LONG).show();
+
+        return true;
     }
 
-    private void addArtist(){
-        String name = editTextName.getText().toString().trim();
-        String genre = spinnerGenres.getSelectedItem().toString();
+    private void addArtist() {
+        String name = edtName.getText().toString().trim();
+        String genre = spinGenres.getSelectedItem().toString();
 
-        if (!TextUtils.isEmpty(name)){
+        if (!TextUtils.isEmpty(name)) {
+            String id = databaseArtists.push().getKey();
 
-        String id = databaseArtist.push().getKey();
+            Artist artist = new Artist(id, name, genre);
 
-            Artist artist = new Artist(id, name , genre);
+            databaseArtists.child(id).setValue(artist);
 
-            databaseArtist.child(id).setValue(artist);
-
-            Toast.makeText(this, "Tambah Artist", Toast.LENGTH_LONG);
-
-        }else{
-            Toast.makeText(this, "Masukan Nama Anda", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Artist Added", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "You should enter a name", Toast.LENGTH_LONG).show();
         }
     }
 }

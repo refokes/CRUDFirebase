@@ -13,29 +13,29 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 public class TrackList extends ArrayAdapter<Track> {
-
     private Activity context;
-    private List<Track> track;
+    private List<Track> trackList;
 
-    public TrackList(Activity context, List<Track> track){
-        super(context, R.layout.track_list, track);
+    public TrackList(Activity context, List<Track> trackList) {
+        super(context, R.layout.layout_track_list, trackList);
         this.context = context;
-        this.track = track;
+        this.trackList = trackList;
     }
 
     @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = context.getLayoutInflater();
 
-        View listViewItem = inflater.inflate(R.layout.track_list, null, true);
+        View listViewItem = inflater.inflate(R.layout.layout_track_list, null, true);
 
-        TextView textViewName = (TextView) listViewItem.findViewById(R.id.textViewName);
-        TextView textViewRating = (TextView) listViewItem.findViewById(R.id.textViewRating);
+        TextView tvName = (TextView) listViewItem.findViewById(R.id.tvName);
+        TextView tvRating = (TextView) listViewItem.findViewById(R.id.tvRating);
 
-        Track tracks = track.get(position);
-        textViewName.setText(tracks.getTrackName());
-        textViewRating.setText(String.valueOf(tracks.getTrackRating()));
+        Track track = trackList.get(position);
+
+        tvName.setText(track.getTrackName());
+        tvRating.setText(track.getTrackRating()+"");
 
         return listViewItem;
     }

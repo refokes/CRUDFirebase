@@ -1,22 +1,22 @@
 package com.example.crudfirebase;
 
 public class Artist {
-    String artistId;
+    String artistID;
     String artistName;
     String artistGenre;
 
-    public Artist(){
+    public Artist() {
 
     }
 
-    public Artist(String artistId, String artistName, String artistGenre) {
-        this.artistId = artistId;
+    public Artist(String artistID, String artistName, String artistGenre) {
+        this.artistID = artistID;
         this.artistName = artistName;
         this.artistGenre = artistGenre;
     }
 
-    public String getArtistId() {
-        return artistId;
+    public String getArtistID() {
+        return artistID;
     }
 
     public String getArtistName() {

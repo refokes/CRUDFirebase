@@ -3,9 +3,9 @@ package com.example.crudfirebase;
 public class Track {
     private String trackId;
     private String trackName;
-    private  int trackRating;
+    private int trackRating;
 
-    public Track(){
+    public Track() {
 
     }
 

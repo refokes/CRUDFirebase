@@ -20,47 +20,49 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class AddTrackActivity extends AppCompatActivity {
 
-    TextView textViewArtistName;
-    EditText editTextTrackName;
+    TextView tvArtistName;
+    EditText edtTrackName;
     SeekBar seekBarRating;
-    ListView listViewTrack;
-    Button buttonAddTrack;
+    Button btnAddTrack;
 
-    DatabaseReference databaseTrack;
+    ListView lvTracks;
 
-    List<Track> tracks;
+    DatabaseReference databaseTracks;
+
+    List<Track> trackList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_track);
 
-        textViewArtistName = (TextView)findViewById(R.id.textViewArtistName);
-        editTextTrackName = (EditText)findViewById(R.id.editTextTrackName);
-        seekBarRating = (SeekBar)findViewById(R.id.seekBarRating);
-        listViewTrack = (ListView)findViewById(R.id.listViewTrack);
-        buttonAddTrack = (Button)findViewById(R.id.buttonAddTrack);
+        tvArtistName = (TextView) findViewById(R.id.tvNameArtist);
+        edtTrackName = (EditText) findViewById(R.id.edtTrackName);
+        seekBarRating = (SeekBar) findViewById(R.id.seekbarRating);
+        btnAddTrack = (Button) findViewById(R.id.btnAddTrack);
+
+        lvTracks = (ListView) findViewById(R.id.lvTracks);
 
         Intent intent = getIntent();
 
-        tracks = new ArrayList<>();
+        trackList = new ArrayList<>();
+
         String id = intent.getStringExtra(MainActivity.ARTIST_ID);
         String name = intent.getStringExtra(MainActivity.ARTIST_NAME);
 
-        textViewArtistName.setText(name);
-        databaseTrack = FirebaseDatabase.getInstance().getReference("track").child(id);
+        tvArtistName.setText(name);
 
-        buttonAddTrack.setOnClickListener(new View.OnClickListener() {
+        databaseTracks = FirebaseDatabase.getInstance().getReference("tracks").child(id);
+
+        btnAddTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                savetTrack();
+                saveTrack();
             }
         });
     }
@@ -69,37 +71,39 @@ public class AddTrackActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        databaseTrack.addValueEventListener(new ValueEventListener() {
+        databaseTracks.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                tracks.clear();
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                trackList.clear();
 
-                for (DataSnapshot trackSnapshot : dataSnapshot.getChildren()){
+                for (DataSnapshot trackSnapshot : dataSnapshot.getChildren()) {
                     Track track = trackSnapshot.getValue(Track.class);
-                    tracks.add(track);
+                    trackList.add(track);
                 }
-                TrackList trackListAdapter = new TrackList(AddTrackActivity.this, tracks);
-                listViewTrack.setAdapter(trackListAdapter);
+                TrackList trackListadapter = new TrackList(AddTrackActivity.this, trackList);
+                lvTracks.setAdapter(trackListadapter);
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onCancelled(DatabaseError databaseError) {
 
             }
         });
     }
 
-    private  void savetTrack(){
-        String trackName = editTextTrackName.getText().toString().trim();
+    private void saveTrack() {
+        String trackName = edtTrackName.getText().toString().trim();
         int rating = seekBarRating.getProgress();
-        if (!TextUtils.isEmpty(trackName)){
-            String id = databaseTrack.push().getKey();
 
-            Track track = new Track(id, trackName, rating);
-            databaseTrack.child(id).setValue(track);
-            Toast.makeText(this, "Track Berhasil Disimpan", Toast.LENGTH_LONG).show();
-        }else{
-            Toast.makeText(this, "Track Gagal Disimpan", Toast.LENGTH_LONG).show();
+        if(!TextUtils.isEmpty(trackName)) {
+            String id = databaseTracks.push().getKey();
+
+            Track track= new Track(id, trackName, rating);
+            databaseTracks.child(id).setValue(track);
+
+            Toast.makeText(this, "Track saved successfully", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Track name should not be empty", Toast.LENGTH_LONG).show();
         }
     }
 }
